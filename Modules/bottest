@@ -1,0 +1,19 @@
+#!/bin/bash
+[[ $(screen -list| grep -c 'bot_test') == '0' ]] && {
+    clear
+    echo -e "\E[44;1;37m◇    BOT SSH TEST ACTIVATION     \E[0m"
+    echo ""
+    echo -ne "\033[1;32m◇ INFORM THE TELEGRAM BOT TOKEN\033[1;37m: "; read token
+    cd /etc/opiran
+    screen -dmS bot_test ./botsshtest $token > /dev/null 2>&1
+    [[ $(grep -wc "bot_test" /etc/autostart) = '0' ]] && {
+                echo -e "ps x | grep 'bot_test' | grep -v 'grep' || cd /etc/opiran && sudo screen -dmS bot_test ./botsshtest $token && cd $HOME" >>/etc/autostart
+            } || {
+                sed -i '/bot_test/d' /etc/autostart
+                echo -e "ps x | grep 'bot_test' | grep -v 'grep' || cd /etc/opiran && sudo screen -dmS bot_test ./botsshtest $token && cd $HOME" >>/etc/autostart
+            }  
+    clear && echo "◇ BOT ACTIVATED!"
+} || {
+    screen -r -S "bot_test" -X quit
+    clear && echo "◇ BOT DEACTIVATED!"
+}

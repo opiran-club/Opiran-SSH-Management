@@ -1,0 +1,121 @@
+#!/bin/bash
+clear
+source ShellBot.sh
+api_bot=$1
+id_admin=$2
+ShellBot.init --token "$api_bot" --monitor --flush
+ShellBot.username
+
+# - Function menu
+menu() {
+
+[[ "${message_from_id[$id]}" == "$id_admin" ]] && {
+
+    local msg
+        msg="◇──────────────────◇\n"
+        msg+="<b>•🔹•ㅤ🐉ㅤOPIRAN MANAGERㅤ🐉ㅤ•🔹•</b>\n"
+        msg+="◇──────────────────◇\n\n"
+        ShellBot.sendMessage --chat_id ${message_chat_id[$id]} \
+        --text "$(echo -e $msg)" \
+        --reply_markup "$keyboard1" \
+        --parse_mode html
+        return 0
+       
+
+  } 
+   ShellBot.sendMessage --chat_id ${message_chat_id[$id]} \
+    --text "$(echo -e 🚫 ACCESS DENIED 🚫)"
+    return 0
+    
+}
+
+# - create function ssh
+createssh30() {
+    
+    user=$(echo BR$(( RANDOM% + 999999)))
+    password=$((RANDOM% + 99999))
+    limit='1'
+    tempo='31'
+    final=$(date "+%Y-%m-%d" -d "+$tempo days")
+    gui=$(date "+%d/%m/%Y" -d "+$tempo days")
+    pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
+    
+  if [[ "$(grep -wc $user /etc/passwd)" != '0' ]]; then
+      ShellBot.sendMessage --chat_id ${callback_query_message_chat_id} \
+        --text "◇ GENERATED ACCOUNT ALREADY EXISTS! TRY AGAIN"
+      return 0
+    
+  else
+     useradd -e $final -M -s /bin/false -p $pass $user >/dev/null 2>&1
+    (echo "$password";echo "$password") | passwd $user > /dev/null 2>&1
+    echo "$password" > /etc/opiran/password/$user
+    echo "$user $limit" >> /root/users.db
+
+    # - ENVIA O SSH
+    ShellBot.sendMessage --chat_id ${callback_query_message_chat_id} \
+    --text "$(echo -e "✅ <b>successfully created</b> ✅\n\n<b>SERVER</b>: $(cat /etc/IP) \n<b>USERNAME</b>: <code>$user</code>\n<b>PASSWORD</b>: <code>$password</code>\n<b>EXPIRE</b>: 01\n\n⏳ Expired in: $gui ")" \
+    --parse_mode html
+    return 0
+  fi
+}
+
+# - create function ssh
+createssh15() {
+    
+    user=$(echo BR$(( RANDOM% + 999999)))
+    password=$((RANDOM% + 99999))
+    limit='1'
+    tempo='16'
+    final=$(date "+%Y-%m-%d" -d "+$tempo days")
+    gui=$(date "+%d/%m/%Y" -d "+$tempo days")
+    pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
+    
+  if [[ "$(grep -wc $user /etc/passwd)" != '0' ]]; then
+      ShellBot.sendMessage --chat_id ${callback_query_message_chat_id} \
+        --text "◇ GENERATED ACCOUNTALREADY EXISTS! TRY AGAIN"
+      return 0
+    
+  else
+     useradd -e $final -M -s /bin/false -p $pass $user >/dev/null 2>&1
+    (echo "$password";echo "$password") | passwd $user > /dev/null 2>&1
+    echo "$password" > /etc/opiran/password/$user
+    echo "$user $limit" >> /root/users.db
+
+    # - ENVIA O SSH
+    ShellBot.sendMessage --chat_id ${callback_query_message_chat_id} \
+    --text "$(echo -e "✅ <b>pt7gtpgt7pgt7pgt7phpuygypu7o</b> ✅\n\n<b>SERVIDOR</b>: $(cat /etc/IP) \n<b>user</b>: <code>$user</code>\n<b>password</b>: <code>$password</code>\n<b>Expire</b>: 01\n\n⏳ Expired in: $gui ")" \
+    --parse_mode html
+    return 0
+  fi
+}
+
+#informacoes user
+infouser () {
+	ShellBot.sendMessage --chat_id ${message_chat_id[$id]} \
+	--text "$(echo -e "Nome:  ${message_from_first_name[$(ShellBot.ListUpdates)]}\nUser: @${message_from_username[$(ShellBot.ListUpdates)]:-null}")\nID: ${message_from_id[$(ShellBot.ListUpdates)]} " \
+	--parse_mode html
+	return 0
+}
+
+unset button1
+button1=''
+ShellBot.InlineKeyboardButton --button 'button1' --line 1 --text '30 DAYS SSH ACCOUNT' --callback_data 'gerarssh30'
+ShellBot.InlineKeyboardButton --button 'button1' --line 2 --text '15 DAYS SSH ACCOUNT' --callback_data 'gerarssh15'
+
+ShellBot.regHandleFunction --function createssh30 --callback_data gerarssh30
+ShellBot.regHandleFunction --function createssh15 --callback_data gerarssh15
+
+unset keyboard1
+keyboard1="$(ShellBot.InlineKeyboardMarkup -b 'button1')"
+while :; do
+  
+ ShellBot.getUpdates --limit 100 --offset $(ShellBot.OffsetNext) --timeout 30
+  for id in $(ShellBot.ListUpdates); do
+    (
+      ShellBot.watchHandle --callback_data ${callback_query_data[$id]}
+      command=(${message_text[$id]})
+      [[ "${command[0]}" = "/menu"  || "${command[0]}" = "/start" ]] && menu
+      [[ "${command[0]}" = "/id"  ]] && infouser
+    ) &
+  done
+done
